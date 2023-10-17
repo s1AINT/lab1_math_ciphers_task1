@@ -1,18 +1,24 @@
 ﻿using System;
+using System.Text;
 
 class Program
 {
     static void Main()
     {
+        Console.OutputEncoding = Encoding.UTF8;
+
         // Український алфавіт
-        string alphabet = "абвгдеєжзиіїйклмнопрстуфхцчшщьюя";
-         
+        string alphabet = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯабвгґдеєжзиіїйклмнопрстуфхцчшщьюя0123456789";
+
         //стовпцевий та рядковий ключі
-        string columnKey = "3241"; // Приклад
-        string rowKey = "2314";    // Приклад
+        //string columnKey = "324150"; 
+        //string rowKey = "231450";
+
+        string columnKey = "абвгдєжзи";
+        string rowKey = "іїйклмноп";
 
         Console.WriteLine("Введіть текст для шифрування:");
-        string plaintext = Console.ReadLine().ToLower();
+        string plaintext = Console.ReadLine();
 
         string encryptedText = Encrypt(plaintext, alphabet, columnKey, rowKey);
         Console.WriteLine("Зашифрований текст: " + encryptedText);
@@ -27,23 +33,31 @@ class Program
 
         foreach (char character in plaintext)
         {
-            if (character == ' ') // Пропускаємо пробіли
+            if (character == ' ')
             {
-                encryptedText += ' ';
+                encryptedText += ' '; // Додаємо символ пробілу в зашифрований текст
                 continue;
             }
 
-            int columnIndex = columnKey.IndexOf(character);
-            int rowIndex = rowKey.IndexOf(character);
+            int alphabetIndex = alphabet.IndexOf(character);
 
-            if (columnIndex == -1 || rowIndex == -1)
+            if (alphabetIndex == -1)
             {
-                // Символ не знайдено у ключах, додаємо його без змін
                 encryptedText += character;
             }
             else
             {
-                encryptedText += alphabet[columnIndex * rowKey.Length + rowIndex];
+                int columnIndex = alphabetIndex / rowKey.Length;
+                int rowIndex = alphabetIndex % rowKey.Length;
+
+                if (columnIndex < columnKey.Length && rowIndex < rowKey.Length)
+                {
+                    encryptedText += columnKey[columnIndex].ToString() + rowKey[rowIndex].ToString();
+                }
+                else
+                {
+                    encryptedText += character;
+                }
             }
         }
 
@@ -54,29 +68,48 @@ class Program
     {
         string decryptedText = "";
 
-        foreach (char character in encryptedText)
+        for (int i = 0; i < encryptedText.Length; i++)
         {
-            if (character == ' ') // Пропускаємо пробіли
+            char currentChar = encryptedText[i];
+
+            if (currentChar == ' ')
             {
-                decryptedText += ' ';
-                continue;
+                decryptedText += ' '; // Відновлюємо символ пробілу
             }
-
-            int indexInAlphabet = alphabet.IndexOf(character);
-
-            if (indexInAlphabet == -1)
+            else if (i < encryptedText.Length - 1)
             {
-                // Символ не входить в алфавіт, додаємо його без змін
-                decryptedText += character;
+                char nextChar = encryptedText[i + 1];
+                string pair = currentChar.ToString() + nextChar.ToString();
+
+                int columnIndex = columnKey.IndexOf(pair[0]);
+                int rowIndex = rowKey.IndexOf(pair[1]);
+
+                if (columnIndex != -1 && rowIndex != -1)
+                {
+                    int alphabetIndex = columnIndex * rowKey.Length + rowIndex;
+
+                    if (alphabetIndex < alphabet.Length)
+                    {
+                        decryptedText += alphabet[alphabetIndex];
+                    }
+                    else
+                    {
+                        decryptedText += pair;
+                    }
+                    i++; // Перескочуємо на наступну пару символів
+                }
+                else
+                {
+                    decryptedText += pair;
+                }
             }
             else
             {
-                int columnIndex = indexInAlphabet / rowKey.Length;
-                int rowIndex = indexInAlphabet % rowKey.Length;
-                decryptedText += columnKey[columnIndex] + rowKey[rowIndex];
+                decryptedText += currentChar;
             }
         }
 
         return decryptedText;
     }
+
 }
